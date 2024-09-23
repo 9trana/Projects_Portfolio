@@ -2,6 +2,7 @@
 
 library(rvest)
 library(dplyr)
+library(ggplot2)
 
 # URL of the Amazon search results page (adjust as needed), keyword, page numbers
 finaldata<-data.frame()
@@ -86,8 +87,18 @@ result_cleaner<-subset(result_clean, Price!='NANA')
 finaldata<-rbind(finaldata,result_cleaner)
 }
 
-#visualize the results
-hist(as.numeric(finaldata$Price))
-hist(as.numeric(finaldata$Ratings))
-hist(as.numeric(finaldata$Reviews))
+#convert prices to numeric
+finaldata$Price<-as.numeric(finaldata$Price)
 
+# Step 1: Reshape the data to long format for faceting
+long_data <- finaldata %>%
+  pivot_longer(cols = c(Price, Reviews, Ratings),
+               names_to = "variable",
+               values_to = "value")
+
+# Step 2: Create the ggplot
+ggplot(long_data, aes(x = value)) +
+  geom_histogram(bins = 30, fill = "steelblue", color = "black", alpha = 0.7) +
+  facet_wrap(~variable, scales = "free") +  # Separate panels for each variable
+  labs(x = "Value", y = "Frequency", title = "Histograms for Price, Reviews, and Average Rating of True Wireless Headphones") +
+  theme_minimal()
